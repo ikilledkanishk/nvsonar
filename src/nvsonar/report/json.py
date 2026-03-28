@@ -90,6 +90,14 @@ def build_report(
             }
             for r in (recommendations or [])
         ],
+        "processes": [
+            {
+                "pid": p.pid,
+                "name": p.name,
+                "used_memory_mb": p.used_memory // (1024 ** 2),
+            }
+            for p in metrics.processes
+        ],
     }
 
 
