@@ -69,6 +69,7 @@ def report(
 
     # report per GPU
     json_reports = []
+    csv_rows = []
     for i in indices:
         info = get_gpu_info(i)
         if not info:
@@ -83,6 +84,8 @@ def report(
 
         if json:
             json_reports.append(to_json(info, metrics, bottleneck, recommendations=recs))
+        elif csv:
+            csv_rows.append(report_to_csv_row(info, metrics, bottleneck))
         else:
             print_report(info, metrics, bottleneck, recommendations=recs)
 
@@ -92,14 +95,6 @@ def report(
         else:
             typer.echo("[" + ",\n".join(json_reports) + "]")
     elif csv:
-        csv_rows = []
-        for i in indices:
-            info = get_gpu_info(i)
-            if not info:
-                continue
-            metrics = all_metrics[i]
-            bottleneck = classify(metrics)
-            csv_rows.append(report_to_csv_row(info, metrics, bottleneck))
         typer.echo(to_csv(csv_rows))
 
 

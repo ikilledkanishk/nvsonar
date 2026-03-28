@@ -1,4 +1,4 @@
-"""CSV report output for nvsonar"""
+"""CSV report output"""
 
 import csv
 import io
@@ -46,7 +46,7 @@ def report_to_csv_row(
     metrics: Metrics,
     bottleneck: BottleneckResult,
 ) -> dict:
-    """Build a flat dict suitable for CSV output."""
+    """Build a flat dict suitable for CSV output"""
     report = build_report(gpu_info, metrics, bottleneck)
     gpu = report["gpu"]
     m = report["metrics"]
@@ -89,7 +89,7 @@ def report_to_csv_row(
 
 
 def to_csv(rows: list[dict]) -> str:
-    """Serialize rows to CSV string with header."""
+    """Serialize rows to CSV string with header"""
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=CSV_FIELDS, extrasaction="ignore")
     writer.writeheader()

@@ -377,11 +377,6 @@ class App(TextualApp):
     TabbedContent {
         height: auto;
     }
-
-    .placeholder {
-        padding: 2;
-        text-align: center;
-    }
     """
 
     BINDINGS = [
