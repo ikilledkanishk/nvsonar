@@ -30,12 +30,13 @@ def main(ctx: typer.Context):
 @app.command()
 def report(
     json: bool = typer.Option(False, "--json", help="Output as JSON"),
+    csv: bool = typer.Option(False, "--csv", help="Output as CSV"),
     gpu: int = typer.Option(-1, "--gpu", help="GPU index, -1 for all"),
 ):
     """One-shot GPU diagnostic report"""
     from nvsonar.monitor import initialize, get_device_count, get_gpu_info, MetricsCollector
     from nvsonar.analysis import classify, detect_outliers, recommend
-    from nvsonar.report import print_report, to_json
+    from nvsonar.report import print_report, to_json, report_to_csv_row, to_csv
 
     if not initialize():
         typer.echo("Error: failed to initialize NVML, no NVIDIA GPU found", err=True)
@@ -68,6 +69,7 @@ def report(
 
     # report per GPU
     json_reports = []
+    csv_rows = []
     for i in indices:
         info = get_gpu_info(i)
         if not info:
@@ -82,6 +84,8 @@ def report(
 
         if json:
             json_reports.append(to_json(info, metrics, bottleneck, recommendations=recs))
+        elif csv:
+            csv_rows.append(report_to_csv_row(info, metrics, bottleneck))
         else:
             print_report(info, metrics, bottleneck, recommendations=recs)
 
@@ -90,6 +94,8 @@ def report(
             typer.echo(json_reports[0])
         else:
             typer.echo("[" + ",\n".join(json_reports) + "]")
+    elif csv:
+        typer.echo(to_csv(csv_rows))
 
 
 if __name__ == "__main__":

@@ -59,6 +59,7 @@ pip install nvsonar
 nvsonar                  # interactive TUI
 nvsonar report           # one-shot diagnostic
 nvsonar report --json    # structured output for scripts/LLMs
+nvsonar report --csv     # CSV output for spreadsheets
 nvsonar report --gpu 0   # specific GPU
 ```
 
