@@ -7,7 +7,7 @@ from rich.text import Text
 
 from nvsonar.monitor import Metrics
 from nvsonar.monitor.hardware import GPUInfo
-from nvsonar.analysis.bottleneck import BottleneckResult
+from nvsonar.analysis.bottleneck import BottleneckResult, BottleneckType
 from nvsonar.analysis.temporal import Pattern
 from nvsonar.analysis.recommendations import Recommendation
 
@@ -34,8 +34,10 @@ def _health_score(metrics: Metrics, bottleneck: BottleneckResult) -> int:
     else:
         scores["power"] = 50
 
-    # clocks: 100 minus reduction percentage
-    scores["clocks"] = max(0, int(100 - metrics.clock_reduction_pct))
+    is_idle = bottleneck.bottleneck == BottleneckType.IDLE
+
+    # clocks: 100 minus reduction percentage (skip penalty for idle GPUs)
+    scores["clocks"] = 100 if is_idle else max(0, int(100 - metrics.clock_reduction_pct))
 
     # memory: 100 if <80% used, linear decay to 0 at 100%
     mem_pct = metrics.memory_used_pct
@@ -44,8 +46,8 @@ def _health_score(metrics: Metrics, bottleneck: BottleneckResult) -> int:
     else:
         scores["memory"] = max(0, int(100 * (100 - mem_pct) / 20))
 
-    # pcie: 100 if at max, 60 if degraded
-    scores["pcie"] = 60 if metrics.pcie.is_degraded else 100
+    # pcie: 100 if at max, 60 if degraded (skip penalty for idle GPUs)
+    scores["pcie"] = 100 if (is_idle or not metrics.pcie.is_degraded) else 60
 
     # ecc: 100 if no errors, 30 if correctable, 0 if uncorrectable
     if metrics.ecc.uncorrectable > 0:
@@ -72,7 +74,7 @@ def _health_score(metrics: Metrics, bottleneck: BottleneckResult) -> int:
         total *= 0.3
     if metrics.throttle.worst_severity == "critical":
         total *= 0.7
-    if metrics.pcie.is_degraded:
+    if metrics.pcie.is_degraded and not is_idle:
         total *= 0.85
 
     return max(0, min(100, int(total)))
