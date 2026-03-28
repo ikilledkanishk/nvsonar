@@ -141,6 +141,8 @@ def print_report(
         + (f" ({metrics.clock_reduction_pct:.0f}% reduced)" if metrics.clock_reduction_pct > 1 else ""),
     )
     table.add_row("Temperature", f"{metrics.temperature}C")
+    table.add_row("Driver", gpu_info.driver_version)
+    table.add_row("CUDA", gpu_info.cuda_version)
 
     if metrics.power_usage is not None:
         if metrics.power_limit is not None:
