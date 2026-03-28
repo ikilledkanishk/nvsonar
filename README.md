@@ -23,7 +23,7 @@ GPU monitoring tools show utilization percentages, but this can be misleading. A
 ## Example
 
 ```
-╭──── GPU 0: NVIDIA GeForce RTX 4090    Health: B (82/100) ────╮
+╭──── GPU 0: NVIDIA GeForce RTX 4090    Health: B (82/100) ─────╮
 │  GPU utilization       95%                                    │
 │  Memory controller     45%                                    │
 │  VRAM                  18432MB / 24576MB (75%)                │
@@ -34,7 +34,7 @@ GPU monitoring tools show utilization percentages, but this can be misleading. A
 │  Throttle              Clock state: Software Power Cap        │
 │                                                               │
 │  Bottleneck: power_limited (90% confidence)                   │
-│  Power draw at 84% of limit, clocks reduced 0%               │
+│  Power draw at 84% of limit, clocks reduced 0%                │
 │                                                               │
 │  Recommendations:                                             │
 │    [P1] GPU is power limited                                  │
@@ -59,6 +59,7 @@ pip install nvsonar
 nvsonar                  # interactive TUI
 nvsonar report           # one-shot diagnostic
 nvsonar report --json    # structured output for scripts/LLMs
+nvsonar report --csv     # CSV output for spreadsheets
 nvsonar report --gpu 0   # specific GPU
 ```
 
