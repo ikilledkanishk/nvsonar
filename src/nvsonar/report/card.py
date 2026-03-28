@@ -141,11 +141,14 @@ def print_report(
     table.add_row("Temperature", f"{metrics.temperature}C")
 
     if metrics.power_usage is not None:
-        table.add_row(
-            "Power",
-            f"{metrics.power_usage:.0f}W / {metrics.power_limit:.0f}W"
-            + (f" ({metrics.power_used_pct:.0f}%)" if metrics.power_used_pct else ""),
-        )
+        if metrics.power_limit is not None:
+            power_str = (
+                f"{metrics.power_usage:.0f}W / {metrics.power_limit:.0f}W"
+                + (f" ({metrics.power_used_pct:.0f}%)" if metrics.power_used_pct else "")
+            )
+        else:
+            power_str = f"{metrics.power_usage:.0f}W"
+        table.add_row("Power", power_str)
 
     pcie = metrics.pcie
     pcie_str = f"Gen{pcie.current_link_gen} x{pcie.current_link_width}"

@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.scripts]
-nvsonar = "nvsonar.cli:main"
+nvsonar = "nvsonar.cli:app"
 
 [project.urls]
 Homepage = "https://btursunbayev.com"
