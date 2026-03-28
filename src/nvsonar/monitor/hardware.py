@@ -1,5 +1,6 @@
 """GPU hardware detection and PCIe/ECC diagnostics"""
 
+import os
 from dataclasses import dataclass
 
 import pynvml as nvml
@@ -97,6 +98,15 @@ class ECCInfo:
     @property
     def has_errors(self) -> bool:
         return self.correctable > 0 or self.uncorrectable > 0
+
+
+@dataclass
+class GPUProcess:
+    """A compute process running on the GPU"""
+
+    pid: int
+    name: str
+    used_memory: int  # bytes
 
 
 def get_handle(device_index: int):
@@ -247,3 +257,21 @@ def get_ecc_info(handle) -> ECCInfo:
         uncorrectable=uncorrectable,
         ecc_enabled=ecc_enabled,
     )
+
+
+def get_gpu_processes(handle) -> list[GPUProcess]:
+    """Get compute processes currently running on a GPU"""
+    try:
+        procs = nvml.nvmlDeviceGetComputeRunningProcesses(handle)
+    except nvml.NVMLError:
+        return []
+
+    result = []
+    for p in procs:
+        try:
+            name = os.path.basename(_decode(nvml.nvmlSystemGetProcessName(p.pid)))
+        except nvml.NVMLError:
+            name = "unknown"
+        used_mem = p.usedGpuMemory if p.usedGpuMemory is not None else 0
+        result.append(GPUProcess(pid=p.pid, name=name, used_memory=used_mem))
+    return result
