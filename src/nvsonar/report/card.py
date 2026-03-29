@@ -203,4 +203,14 @@ def print_report(
             for action in rec.actions:
                 content.add_row(Text(f"      - {action}", style="dim"))
 
+    # processes
+    content.add_row(Text())
+    content.add_row(Text("  Processes:", style="bold"))
+    if metrics.processes:
+        for proc in metrics.processes:
+            mem_mb = proc.used_memory // (1024 ** 2)
+            content.add_row(Text(f"    PID {proc.pid:<8} {proc.name:<24} {mem_mb} MB", style="dim"))
+    else:
+        content.add_row(Text("    (none)", style="dim"))
+
     console.print(Panel(content, title=header, border_style=grade_color))

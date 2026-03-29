@@ -2,14 +2,21 @@
 
 import sys
 
+from nvsonar import __version__
 import typer
 
 app = typer.Typer(add_completion=False, invoke_without_command=True)
 
 
 @app.callback()
-def main(ctx: typer.Context):
+def main(
+    ctx: typer.Context,
+    version: bool = typer.Option(False, "--version", help="Print version and exit")
+):
     """GPU diagnostic tool — run without arguments for TUI"""
+    if version:
+        typer.echo(f"nvsonar {__version__}")
+        sys.exit(0)
     if ctx.invoked_subcommand is not None:
         return
 

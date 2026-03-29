@@ -1,10 +1,10 @@
 """GPU metrics collection via NVML"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pynvml as nvml
 
-from .hardware import get_handle, get_pcie_info, get_ecc_info, PCIeInfo, ECCInfo
+from .hardware import get_handle, get_pcie_info, get_ecc_info, get_gpu_processes, PCIeInfo, ECCInfo, GPUProcess
 from .throttle import decode_throttle_reasons, ThrottleStatus
 
 
@@ -43,6 +43,9 @@ class Metrics:
 
     # ECC
     ecc: ECCInfo
+
+    # Processes
+    processes: list[GPUProcess] = field(default_factory=list)
 
     @property
     def memory_used_pct(self) -> float:
@@ -139,6 +142,7 @@ class MetricsCollector:
         throttle = decode_throttle_reasons(h)
         pcie = get_pcie_info(h)
         ecc = get_ecc_info(h)
+        processes = get_gpu_processes(h)
 
         return Metrics(
             gpu_utilization=gpu_util,
@@ -155,4 +159,5 @@ class MetricsCollector:
             throttle=throttle,
             pcie=pcie,
             ecc=ecc,
+            processes=processes,
         )
