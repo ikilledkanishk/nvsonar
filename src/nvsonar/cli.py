@@ -89,6 +89,10 @@ def report(
         gpu_outliers = [o for o in outliers if o.gpu_index == i]
         recs = recommend(bottleneck=bottleneck, outliers=gpu_outliers)
 
+        # save to history
+        from nvsonar.history import save_from_metrics
+        save_from_metrics(i, info.name, metrics, bottleneck)
+
         if json:
             json_reports.append(to_json(info, metrics, bottleneck, recommendations=recs))
         elif csv:
@@ -103,6 +107,18 @@ def report(
             typer.echo("[" + ",\n".join(json_reports) + "]")
     elif csv:
         typer.echo(to_csv(csv_rows))
+
+
+@app.command()
+def history(
+    gpu: int = typer.Option(-1, "--gpu", help="GPU index, -1 for all"),
+    days: int = typer.Option(7, "--days", help="Number of days to show"),
+):
+    """Show GPU health trends over time"""
+    from nvsonar.history import print_history
+
+    gpu_index = gpu if gpu >= 0 else None
+    print_history(gpu_index=gpu_index, days=days)
 
 
 @app.command()
