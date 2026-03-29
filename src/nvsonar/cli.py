@@ -105,5 +105,75 @@ def report(
         typer.echo(to_csv(csv_rows))
 
 
+@app.command()
+def benchmark(
+    memory: bool = typer.Option(False, "--memory", help="Run memory bandwidth only"),
+    compute: bool = typer.Option(False, "--compute", help="Run compute throughput only"),
+    pcie: bool = typer.Option(False, "--pcie", help="Run PCIe bandwidth only"),
+):
+    """Run GPU performance benchmarks"""
+    from nvsonar.monitor import initialize, get_gpu_info
+    from nvsonar.baselines.specs import find_specs
+
+    if not initialize():
+        typer.echo("Error: failed to initialize NVML, no NVIDIA GPU found", err=True)
+        sys.exit(1)
+
+    info = get_gpu_info(0)
+    if not info:
+        typer.echo("Error: could not read GPU info", err=True)
+        sys.exit(1)
+
+    specs = find_specs(info.name)
+
+    typer.echo(f"GPU: {info.name}")
+    typer.echo(f"Compiling benchmarks (first run may take a few seconds)...")
+    typer.echo()
+
+    run_all = not memory and not compute and not pcie
+
+    if memory or run_all:
+        try:
+            from nvsonar.benchmark import run_memory
+            result = run_memory()
+            typer.echo(f"Memory bandwidth:")
+            typer.echo(f"  Read:  {result.read_gbps:.1f} GB/s")
+            typer.echo(f"  Write: {result.write_gbps:.1f} GB/s")
+            typer.echo(f"  Copy:  {result.copy_gbps:.1f} GB/s")
+            if specs:
+                pct = (result.copy_gbps / specs.memory_bandwidth_gbps) * 100
+                typer.echo(f"  Spec:  {specs.memory_bandwidth_gbps:.0f} GB/s ({pct:.0f}% of theoretical)")
+            typer.echo()
+        except RuntimeError as e:
+            typer.echo(f"Memory benchmark failed: {e}", err=True)
+
+    if compute or run_all:
+        try:
+            from nvsonar.benchmark import run_compute
+            result = run_compute()
+            typer.echo(f"Compute throughput:")
+            typer.echo(f"  FP32:  {result.tflops:.2f} TFLOPS")
+            if specs:
+                pct = (result.tflops / specs.fp32_tflops) * 100
+                typer.echo(f"  Spec:  {specs.fp32_tflops:.1f} TFLOPS ({pct:.0f}% of theoretical)")
+            typer.echo()
+        except RuntimeError as e:
+            typer.echo(f"Compute benchmark failed: {e}", err=True)
+
+    if pcie or run_all:
+        try:
+            from nvsonar.benchmark import run_pcie
+            result = run_pcie()
+            typer.echo(f"PCIe bandwidth:")
+            typer.echo(f"  Host->GPU: {result.h2d_gbps:.1f} GB/s")
+            typer.echo(f"  GPU->Host: {result.d2h_gbps:.1f} GB/s")
+            if specs:
+                pct = (result.h2d_gbps / specs.pcie_bandwidth_gbps) * 100
+                typer.echo(f"  Spec:      {specs.pcie_bandwidth_gbps:.1f} GB/s Gen{specs.pcie_gen} ({pct:.0f}% of theoretical)")
+            typer.echo()
+        except RuntimeError as e:
+            typer.echo(f"PCIe benchmark failed: {e}", err=True)
+
+
 if __name__ == "__main__":
     app()
