@@ -127,11 +127,6 @@ class MetricsCollector:
         except nvml.NVMLError:
             power_limit = None
 
-        if power_usage is not None:
-            pass  # power read ok
-        else:
-            pass  # power not available
-
         try:
             fan_speed = nvml.nvmlDeviceGetFanSpeed(h)
             # print(f"fan {fan_speed}%")
