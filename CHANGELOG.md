@@ -14,6 +14,10 @@
 - Throttle bitmask decoder with severity levels
 - PCIe link degradation detection
 - ECC error monitoring
+- GPU performance benchmarks: memory bandwidth, compute throughput, PCIe speed (`nvsonar benchmark`)
+- Historical tracking with trend analysis (`nvsonar history`)
+- Session monitoring Python API (`nvsonar.start()`, `nvsonar.stop()`, `nvsonar.monitor()`)
+- CSV report output (`nvsonar report --csv`)
 
 ### Changed
 - Complete architecture rewrite: monitor/ -> analysis/ -> report/ layers

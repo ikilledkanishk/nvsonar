@@ -18,7 +18,10 @@ GPU monitoring tools show utilization percentages, but this can be misleading. A
 - Throttle bitmask decoder with severity levels
 - PCIe link degradation and ECC error monitoring
 - Actionable recommendations with specific commands
-- JSON output for automation and scripting
+- GPU performance benchmarks (memory bandwidth, compute throughput, PCIe speed)
+- Historical tracking with trend analysis over time
+- Session monitoring Python API for workload profiling
+- JSON and CSV output for automation and scripting
 
 ## Example
 
@@ -61,6 +64,8 @@ nvsonar report           # one-shot diagnostic
 nvsonar report --json    # structured output for scripts/LLMs
 nvsonar report --csv     # CSV output for spreadsheets
 nvsonar report --gpu 0   # specific GPU
+nvsonar benchmark        # GPU performance benchmarks
+nvsonar history          # health trends over time
 ```
 
 ## License
