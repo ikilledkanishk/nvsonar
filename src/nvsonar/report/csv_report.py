@@ -3,9 +3,9 @@
 import csv
 import io
 
+from nvsonar.analysis.bottleneck import BottleneckResult
 from nvsonar.monitor import Metrics
 from nvsonar.monitor.hardware import GPUInfo
-from nvsonar.analysis.bottleneck import BottleneckResult
 from nvsonar.report.json import build_report
 
 CSV_FIELDS = [
@@ -38,6 +38,8 @@ CSV_FIELDS = [
     "bottleneck",
     "bottleneck_confidence",
     "bottleneck_detail",
+    "process_count",
+    "process_pids",
 ]
 
 
@@ -54,6 +56,7 @@ def report_to_csv_row(
     pcie = report["pcie"]
     ecc = report["ecc"]
     analysis = report["analysis"]
+    processes = report.get("processes", [])
 
     return {
         "gpu_index": gpu["index"],
@@ -85,6 +88,8 @@ def report_to_csv_row(
         "bottleneck": analysis["bottleneck"],
         "bottleneck_confidence": analysis["confidence"],
         "bottleneck_detail": analysis["detail"],
+        "process_count": len(processes),
+        "process_pids": ",".join(str(p["pid"]) for p in processes),
     }
 
 
