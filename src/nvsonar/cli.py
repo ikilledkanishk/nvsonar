@@ -150,11 +150,11 @@ def benchmark(
 
     run_all = not memory and not compute and not pcie
 
-    table = Table(show_header=True, box=None, padding=(0, 2))
+    table = Table(show_header=True, box=None, padding=(0, 2), show_lines=False)
     table.add_column("Benchmark")
-    table.add_column("Measured", style="bold")
+    table.add_column("Measured")
     table.add_column("Spec")
-    table.add_column("Score", style="bold")
+    table.add_column("Score")
 
     if memory or run_all:
         try:
