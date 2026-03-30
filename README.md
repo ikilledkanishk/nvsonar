@@ -5,8 +5,6 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Downloads](https://pepy.tech/badge/nvsonar)](https://pepy.tech/project/nvsonar)
 
-Active GPU diagnostic tool that identifies performance bottlenecks, detects anomalous patterns over time, and gives you actionable recommendations.
-
 ![nvsonar demo](https://raw.githubusercontent.com/btursunbayev/nvsonar/main/docs/demo.gif)
 
 GPU monitoring tools show utilization percentages, but this can be misleading. A GPU reporting 100% utilization may actually be computing useful work, or wastefully stalled waiting on memory transfers, thermal throttling, or power limits. NVSonar analyzes real-time patterns from NVML metrics to identify what's actually limiting your GPU performance.
