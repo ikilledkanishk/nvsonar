@@ -23,28 +23,9 @@ GPU monitoring tools show utilization percentages, but this can be misleading. A
 - Session monitoring Python API for workload profiling
 - JSON and CSV output for automation and scripting
 
-## Example
+## Demo
 
-```
-╭──── GPU 0: NVIDIA GeForce RTX 4090    Health: B (82/100) ─────╮
-│  GPU utilization       95%                                    │
-│  Memory controller     45%                                    │
-│  VRAM                  18432MB / 24576MB (75%)                │
-│  Clocks                2520 / 2520 MHz                        │
-│  Temperature           78C                                    │
-│  Power                 380W / 450W (84%)                      │
-│  PCIe                  Gen4 x16                               │
-│  Throttle              Clock state: Software Power Cap        │
-│                                                               │
-│  Bottleneck: power_limited (90% confidence)                   │
-│  Power draw at 84% of limit, clocks reduced 0%                │
-│                                                               │
-│  Recommendations:                                             │
-│    [P1] GPU is power limited                                  │
-│      - Raise power limit: nvidia-smi -pl <watts>              │
-│      - Check that all GPU power cables are connected          │
-╰───────────────────────────────────────────────────────────────╯
-```
+![nvsonar demo](docs/demo.gif)
 
 ## Requirements
 
