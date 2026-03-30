@@ -4,6 +4,7 @@
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Downloads](https://pepy.tech/badge/nvsonar)](https://pepy.tech/project/nvsonar)
+[![CI](https://github.com/ikilledkanishk/nvsonar/actions/workflows/ci.yml/badge.svg)](https://github.com/ikilledkanishk/nvsonar/actions/workflows/ci.yml)
 
 GPU monitoring tools show utilization percentages, but this can be misleading. A GPU reporting 100% utilization may actually be computing useful work, or wastefully stalled waiting on memory transfers, thermal throttling, or power limits. NVSonar analyzes real-time patterns from NVML metrics to identify what's actually limiting your GPU performance.
 
