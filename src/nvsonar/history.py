@@ -215,9 +215,9 @@ def print_history(gpu_index: int | None = None, days: int = 7):
         first_time = time.strftime("%Y-%m-%d %H:%M", time.localtime(gpu_entries[0].timestamp))
         last_time = time.strftime("%Y-%m-%d %H:%M", time.localtime(gpu_entries[-1].timestamp))
 
-        table = Table(show_header=False, box=None, padding=(0, 2))
-        table.add_column(width=20)
-        table.add_column()
+        table = Table(show_header=True, box=None, padding=(0, 2), show_lines=False)
+        table.add_column("Metric", width=20)
+        table.add_column("Value")
 
         temps = [e.temperature for e in gpu_entries]
         utils = [e.gpu_utilization for e in gpu_entries]

@@ -123,9 +123,9 @@ def print_report(
     header.append(f"{grade} ({score}/100)", style=f"bold {grade_color}")
 
     # metrics table
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column(width=20)
-    table.add_column()
+    table = Table(show_header=True, box=None, padding=(0, 2), show_lines=False)
+    table.add_column("Metric", width=20)
+    table.add_column("Value")
 
     # color values by severity
     gpu_util = metrics.gpu_utilization
