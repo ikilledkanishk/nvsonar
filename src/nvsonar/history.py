@@ -191,10 +191,16 @@ def analyze_trends(entries: list[HistoryEntry]) -> list[Trend]:
 
 def print_history(gpu_index: int | None = None, days: int = 7):
     """Print historical trends to terminal"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+
+    console = Console()
     entries = load(gpu_index=gpu_index, days=days)
 
     if not entries:
-        print("No history data found. Run nvsonar report to start collecting data.")
+        console.print("[dim]No history data found. Run nvsonar report to start collecting data.[/dim]")
         return
 
     # group by GPU
@@ -209,28 +215,38 @@ def print_history(gpu_index: int | None = None, days: int = 7):
         first_time = time.strftime("%Y-%m-%d %H:%M", time.localtime(gpu_entries[0].timestamp))
         last_time = time.strftime("%Y-%m-%d %H:%M", time.localtime(gpu_entries[-1].timestamp))
 
-        print(f"\nGPU {idx}: {name}")
-        print(f"  {total} samples from {first_time} to {last_time}")
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column(width=20)
+        table.add_column()
 
-        # summary stats
         temps = [e.temperature for e in gpu_entries]
         utils = [e.gpu_utilization for e in gpu_entries]
-        print(f"  Temperature: {min(temps):.0f}C - {max(temps):.0f}C (avg {sum(temps)/len(temps):.0f}C)")
-        print(f"  Utilization: {min(utils)}% - {max(utils)}% (avg {sum(utils)/len(utils):.0f}%)")
+
+        table.add_row("Samples", f"{total} ({first_time} to {last_time})")
+        table.add_row("Temperature", f"{min(temps):.0f}C - {max(temps):.0f}C (avg {sum(temps)/len(temps):.0f}C)")
+        table.add_row("Utilization", f"{min(utils)}% - {max(utils)}% (avg {sum(utils)/len(utils):.0f}%)")
 
         ecc_total = sum(e.ecc_correctable + e.ecc_uncorrectable for e in gpu_entries)
         if ecc_total > 0:
-            print(f"  ECC errors: {ecc_total}")
+            table.add_row("ECC errors", f"[red]{ecc_total}[/red]")
 
         throttled = sum(1 for e in gpu_entries if e.throttled)
         if throttled > 0:
-            print(f"  Throttled: {throttled}/{total} samples ({throttled/total*100:.0f}%)")
+            table.add_row("Throttled", f"[yellow]{throttled}/{total} ({throttled/total*100:.0f}%)[/yellow]")
+
+        content = Table.grid(padding=(0, 0))
+        content.add_row(table)
 
         # trends
         trends = analyze_trends(gpu_entries)
         if trends:
-            print(f"\n  Trends:")
+            content.add_row(Text())
+            content.add_row(Text("  Trends:", style="bold"))
             for t in trends:
-                print(f"    [{t.direction}] {t.detail}")
+                color = "red" if t.direction == "rising" and t.metric in ("temperature", "ecc_errors", "throttling") else "yellow" if t.direction == "rising" else "green"
+                content.add_row(Text(f"    [{t.direction}] {t.detail}", style=color))
 
-    print()
+        header = Text()
+        header.append(f"GPU {idx}: {name}", style="bold")
+        header.append("    History", style="")
+        console.print(Panel(content, title=header, border_style="white"))

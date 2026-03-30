@@ -128,67 +128,92 @@ def benchmark(
     pcie: bool = typer.Option(False, "--pcie", help="Run PCIe bandwidth only"),
 ):
     """Run GPU performance benchmarks"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
     from nvsonar.monitor import initialize, get_gpu_info
     from nvsonar.baselines.specs import find_specs
 
+    console = Console()
+
     if not initialize():
-        typer.echo("Error: failed to initialize NVML, no NVIDIA GPU found", err=True)
+        console.print("[red]Error: failed to initialize NVML, no NVIDIA GPU found[/red]")
         sys.exit(1)
 
     info = get_gpu_info(0)
     if not info:
-        typer.echo("Error: could not read GPU info", err=True)
+        console.print("[red]Error: could not read GPU info[/red]")
         sys.exit(1)
 
     specs = find_specs(info.name)
 
-    typer.echo(f"GPU: {info.name}")
-    typer.echo(f"Compiling benchmarks (first run may take a few seconds)...")
-    typer.echo()
-
     run_all = not memory and not compute and not pcie
+
+    table = Table(show_header=True, box=None, padding=(0, 2))
+    table.add_column("Benchmark")
+    table.add_column("Measured", style="bold")
+    table.add_column("Spec")
+    table.add_column("Score", style="bold")
 
     if memory or run_all:
         try:
             from nvsonar.benchmark import run_memory
             result = run_memory()
-            typer.echo(f"Memory bandwidth:")
-            typer.echo(f"  Read:  {result.read_gbps:.1f} GB/s")
-            typer.echo(f"  Write: {result.write_gbps:.1f} GB/s")
-            typer.echo(f"  Copy:  {result.copy_gbps:.1f} GB/s")
+
+            spec_str = ""
+            score_str = ""
             if specs:
                 pct = (result.copy_gbps / specs.memory_bandwidth_gbps) * 100
-                typer.echo(f"  Spec:  {specs.memory_bandwidth_gbps:.0f} GB/s ({pct:.0f}% of theoretical)")
-            typer.echo()
+                spec_str = f"{specs.memory_bandwidth_gbps:.0f} GB/s"
+                color = "green" if pct >= 70 else "yellow" if pct >= 50 else "red"
+                score_str = f"[{color}]{pct:.0f}%[/{color}]"
+
+            table.add_row("Memory Read", f"{result.read_gbps:.1f} GB/s", "", "")
+            table.add_row("Memory Write", f"{result.write_gbps:.1f} GB/s", "", "")
+            table.add_row("Memory Copy", f"{result.copy_gbps:.1f} GB/s", spec_str, score_str)
         except RuntimeError as e:
-            typer.echo(f"Memory benchmark failed: {e}", err=True)
+            table.add_row("Memory", f"[red]failed[/red]", "", "")
 
     if compute or run_all:
         try:
             from nvsonar.benchmark import run_compute
             result = run_compute()
-            typer.echo(f"Compute throughput:")
-            typer.echo(f"  FP32:  {result.tflops:.2f} TFLOPS")
+
+            spec_str = ""
+            score_str = ""
             if specs:
                 pct = (result.tflops / specs.fp32_tflops) * 100
-                typer.echo(f"  Spec:  {specs.fp32_tflops:.1f} TFLOPS ({pct:.0f}% of theoretical)")
-            typer.echo()
+                spec_str = f"{specs.fp32_tflops:.1f} TFLOPS"
+                color = "green" if pct >= 80 else "yellow" if pct >= 60 else "red"
+                score_str = f"[{color}]{pct:.0f}%[/{color}]"
+
+            table.add_row("FP32 Compute", f"{result.tflops:.2f} TFLOPS", spec_str, score_str)
         except RuntimeError as e:
-            typer.echo(f"Compute benchmark failed: {e}", err=True)
+            table.add_row("Compute", f"[red]failed[/red]", "", "")
 
     if pcie or run_all:
         try:
             from nvsonar.benchmark import run_pcie
             result = run_pcie()
-            typer.echo(f"PCIe bandwidth:")
-            typer.echo(f"  Host->GPU: {result.h2d_gbps:.1f} GB/s")
-            typer.echo(f"  GPU->Host: {result.d2h_gbps:.1f} GB/s")
+
+            spec_str = ""
+            score_str = ""
             if specs:
                 pct = (result.h2d_gbps / specs.pcie_bandwidth_gbps) * 100
-                typer.echo(f"  Spec:      {specs.pcie_bandwidth_gbps:.1f} GB/s Gen{specs.pcie_gen} ({pct:.0f}% of theoretical)")
-            typer.echo()
+                spec_str = f"{specs.pcie_bandwidth_gbps:.1f} GB/s Gen{specs.pcie_gen}"
+                color = "green" if pct >= 70 else "yellow" if pct >= 40 else "red"
+                score_str = f"[{color}]{pct:.0f}%[/{color}]"
+
+            table.add_row("PCIe Host->GPU", f"{result.h2d_gbps:.1f} GB/s", "", "")
+            table.add_row("PCIe GPU->Host", f"{result.d2h_gbps:.1f} GB/s", spec_str, score_str)
         except RuntimeError as e:
-            typer.echo(f"PCIe benchmark failed: {e}", err=True)
+            table.add_row("PCIe", f"[red]failed[/red]", "", "")
+
+    header = Text()
+    header.append(f"GPU 0: {info.name}", style="bold")
+    header.append("    Benchmark", style="")
+    console.print(Panel(table, title=header, border_style="white"))
 
 
 if __name__ == "__main__":
