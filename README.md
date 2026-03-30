@@ -25,7 +25,7 @@ GPU monitoring tools show utilization percentages, but this can be misleading. A
 
 ## Demo
 
-![nvsonar demo](docs/demo.gif)
+![nvsonar demo](https://raw.githubusercontent.com/btursunbayev/nvsonar/main/docs/demo.gif)
 
 ## Requirements
 
