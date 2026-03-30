@@ -83,15 +83,15 @@ def _health_score(metrics: Metrics, bottleneck: BottleneckResult) -> int:
 def _grade(score: int) -> tuple[str, str]:
     """Score to letter grade and color"""
     if score >= 90:
-        return "A", "green"
+        return "A", "dark_green"
     elif score >= 75:
         return "B", "yellow"
     elif score >= 50:
-        return "C", "bright_yellow"
+        return "C", "yellow"
     elif score >= 25:
         return "D", "red"
     else:
-        return "F", "bright_red"
+        return "F", "red"
 
 
 def _severity_color(severity: str) -> str:
@@ -99,7 +99,7 @@ def _severity_color(severity: str) -> str:
         return "bright_red"
     elif severity == "warning":
         return "yellow"
-    return "dim"
+    return "white"
 
 
 def print_report(
@@ -119,40 +119,60 @@ def print_report(
     # header
     header = Text()
     header.append(f"GPU {gpu_info.index}: {gpu_info.name}", style="bold")
-    header.append("    Health: ", style="dim")
+    header.append("    Health: ", style="")
     header.append(f"{grade} ({score}/100)", style=f"bold {grade_color}")
 
     # metrics table
     table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column(style="dim", width=20)
+    table.add_column(width=20)
     table.add_column()
 
-    table.add_row("GPU utilization", f"{metrics.gpu_utilization}%")
-    table.add_row("Memory controller", f"{metrics.memory_utilization}%")
+    # color values by severity
+    gpu_util = metrics.gpu_utilization
+    table.add_row("GPU utilization", f"{gpu_util}%")
+
+    mem_util = metrics.memory_utilization
+    table.add_row("Memory controller", f"{mem_util}%")
+
+    mem_pct = metrics.memory_used_pct
+    mem_color = "red" if mem_pct > 90 else "yellow" if mem_pct > 75 else ""
     table.add_row(
         "VRAM",
+        f"[{mem_color}]{metrics.memory_used // (1024**2)}MB / "
+        f"{metrics.memory_total // (1024**2)}MB "
+        f"({mem_pct:.0f}%)[/{mem_color}]" if mem_color else
         f"{metrics.memory_used // (1024**2)}MB / "
         f"{metrics.memory_total // (1024**2)}MB "
-        f"({metrics.memory_used_pct:.0f}%)",
+        f"({mem_pct:.0f}%)",
     )
-    table.add_row(
-        "Clocks",
-        f"{metrics.gpu_clock} / {metrics.max_gpu_clock} MHz"
-        + (f" ({metrics.clock_reduction_pct:.0f}% reduced)" if metrics.clock_reduction_pct > 1 else ""),
-    )
-    table.add_row("Temperature", f"{metrics.temperature}C")
+
+    clock_str = f"{metrics.gpu_clock} / {metrics.max_gpu_clock} MHz"
+    if metrics.clock_reduction_pct > 15:
+        clock_str += f" [yellow]({metrics.clock_reduction_pct:.0f}% reduced)[/yellow]"
+    elif metrics.clock_reduction_pct > 1:
+        clock_str += f" ({metrics.clock_reduction_pct:.0f}% reduced)"
+    table.add_row("Clocks", clock_str)
+
+    temp = metrics.temperature
+    temp_color = "red" if temp > 85 else "yellow" if temp > 75 else "green" if temp < 60 else ""
+    temp_str = f"[{temp_color}]{temp}C[/{temp_color}]" if temp_color else f"{temp}C"
+    table.add_row("Temperature", temp_str)
+
     table.add_row("Driver", gpu_info.driver_version)
     table.add_row("CUDA", gpu_info.cuda_version)
 
     if metrics.power_usage is not None:
         if metrics.power_limit is not None:
-            power_str = (
-                f"{metrics.power_usage:.0f}W / {metrics.power_limit:.0f}W"
-                + (f" ({metrics.power_used_pct:.0f}%)" if metrics.power_used_pct else "")
-            )
+            pwr_pct = metrics.power_used_pct
+            pwr_color = "red" if pwr_pct and pwr_pct > 95 else "yellow" if pwr_pct and pwr_pct > 85 else ""
+            pwr_str = f"{metrics.power_usage:.0f}W / {metrics.power_limit:.0f}W"
+            if pwr_pct:
+                pwr_str += f" ({pwr_pct:.0f}%)"
+            if pwr_color:
+                pwr_str = f"[{pwr_color}]{pwr_str}[/{pwr_color}]"
         else:
-            power_str = f"{metrics.power_usage:.0f}W"
-        table.add_row("Power", power_str)
+            pwr_str = f"{metrics.power_usage:.0f}W"
+        table.add_row("Power", pwr_str)
 
     pcie = metrics.pcie
     pcie_str = f"Gen{pcie.current_link_gen} x{pcie.current_link_width}"
@@ -169,14 +189,14 @@ def print_report(
     conf_pct = int(bottleneck.confidence * 100)
     bottleneck_text = Text()
     bottleneck_text.append(f"{bottleneck.bottleneck.value}", style="bold")
-    bottleneck_text.append(f" ({conf_pct}% confidence)", style="dim")
+    bottleneck_text.append(f" ({conf_pct}% confidence)", style="")
 
     # build the panel content
     content = Table.grid(padding=(0, 0))
     content.add_row(table)
     content.add_row(Text())  # blank line
-    content.add_row(Text.assemble(("  Bottleneck: ", "dim"), bottleneck_text))
-    content.add_row(Text(f"  {bottleneck.detail}", style="dim"))
+    content.add_row(Text.assemble(("  Bottleneck: ", ""), bottleneck_text))
+    content.add_row(Text(f"  {bottleneck.detail}"))
 
     # warnings
     if bottleneck.warnings:
@@ -198,10 +218,10 @@ def print_report(
         content.add_row(Text())
         content.add_row(Text("  Recommendations:", style="bold"))
         for rec in recommendations:
-            priority_color = "red" if rec.priority == 1 else "yellow" if rec.priority == 2 else "dim"
+            priority_color = "red" if rec.priority == 1 else "yellow" if rec.priority == 2 else "white"
             content.add_row(Text(f"    [P{rec.priority}] {rec.title}", style=f"bold {priority_color}"))
             for action in rec.actions:
-                content.add_row(Text(f"      - {action}", style="dim"))
+                content.add_row(Text(f"      - {action}"))
 
     # processes
     content.add_row(Text())
@@ -209,8 +229,8 @@ def print_report(
     if metrics.processes:
         for proc in metrics.processes:
             mem_mb = proc.used_memory // (1024 ** 2)
-            content.add_row(Text(f"    PID {proc.pid:<8} {proc.name:<24} {mem_mb} MB", style="dim"))
+            content.add_row(Text(f"    PID {proc.pid:<8} {proc.name:<24} {mem_mb} MB"))
     else:
-        content.add_row(Text("    (none)", style="dim"))
+        content.add_row(Text("    (none)"))
 
-    console.print(Panel(content, title=header, border_style=grade_color))
+    console.print(Panel(content, title=header, border_style="white"))

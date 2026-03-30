@@ -65,11 +65,11 @@ class DeviceList(Static):
             return
 
         table = Table(title="Available GPUs")
-        table.add_column("Index", style="cyan", justify="center")
-        table.add_column("Name", style="green")
-        table.add_column("Memory", style="yellow", justify="right")
-        table.add_column("Driver", style="magenta")
-        table.add_column("CUDA", style="blue")
+        table.add_column("Index", justify="center")
+        table.add_column("Name")
+        table.add_column("Memory", justify="right")
+        table.add_column("Driver")
+        table.add_column("CUDA")
 
         for device in devices:
             memory_gb = device.memory_total / (1024**3)
@@ -155,8 +155,8 @@ class LiveMetrics(Static):
 
                 # build display
                 table = Table(show_header=False, box=None, padding=(0, 1))
-                table.add_column("Metric", style="cyan")
-                table.add_column("Value", style="yellow")
+                table.add_column("Metric")
+                table.add_column("Value")
 
                 # utilization bars
                 gpu_bar = _make_bar(m.gpu_utilization, 100)
@@ -234,7 +234,7 @@ class LiveMetrics(Static):
                         table.add_row("", f"[dim]  - {action}[/dim]")
 
                 device_name = self.device_names.get(device_index, f"GPU {device_index}")
-                panel = Panel(table, title=f"{device_name}", border_style="green")
+                panel = Panel(table, title=f"{device_name}", border_style="white")
                 panels.append(panel)
 
             group = Group(*panels)
@@ -297,8 +297,8 @@ class PeakMetrics(Static):
                     continue
 
                 table = Table(show_header=False, box=None, padding=(0, 1))
-                table.add_column("Metric", style="cyan")
-                table.add_column("Peak Value", style="yellow")
+                table.add_column("Metric")
+                table.add_column("Peak Value")
 
                 gpu_bar = _make_bar(peaks["gpu_utilization"], 100)
                 table.add_row("GPU Utilization", f"{gpu_bar} {peaks['gpu_utilization']}%")
@@ -327,7 +327,7 @@ class PeakMetrics(Static):
                 panel = Panel(
                     table,
                     title=f"{device_name} Peak Values (last 60s)",
-                    border_style="yellow",
+                    border_style="white",
                 )
                 panels.append(panel)
 
